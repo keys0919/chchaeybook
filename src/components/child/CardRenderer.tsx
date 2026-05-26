@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
 
   startersSection: { gap: Spacing.sm },
   startersLabel: { ...TextStyle.caption, color: ChildColors.textTertiary },
-  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  chipGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   chip: {
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
@@ -159,6 +159,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: ChildColors.divider,
     backgroundColor: ChildColors.surface1,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   chipText: { ...TextStyle.label, color: ChildColors.textSecondary },
 
