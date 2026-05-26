@@ -162,6 +162,8 @@ export const ComponentSize = {
   recordingWaveformHeight: 48,
   dragHandleWidth: 36,
   dragHandleHeight: 4,
+  badgeHeight: 22,
+  badgePaddingH: 8,
 } as const;
 
 // ─────────────────────────────────────────
@@ -190,4 +192,8 @@ export const CopyTokens = {
   STORAGE_LIMIT: '사진/녹음이 30개 가득 찼어요.',
   STORAGE_OVERWRITE: '가장 오래된 기록이 삭제되고 새 기록이 저장됩니다.',
   ALBUM_TEASER: '기록이 3개 이상 쌓이면 이달의 인화를 볼 수 있어요.',
+  QUIT_SAVE: '지금까지 쓴 내용을 저장할까요?',
+  SKIP_NUDGE_OPTION1: '다른 카드 볼게요',
+  SKIP_NUDGE_OPTION2: '계속 해볼게요',
+  MODE_SWITCH_COACH: '이 버튼으로 다시 돌아올 수 있어요',
 } as const;

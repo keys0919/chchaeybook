@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import * as Crypto from 'expo-crypto';
 import type { Card, CardInputMode } from '../types/card.types';
 
 interface WritingSession {
@@ -12,8 +11,6 @@ interface WritingSession {
   sentences: string[];
   selectedHints: string[];
   sessionIndex: number;
-  mediaTempUri: string | null;
-  mediaTempType: 'photo' | 'voice' | null;
 }
 
 interface SessionStore {
@@ -29,7 +26,6 @@ interface SessionStore {
   setInputMode: (mode: CardInputMode) => void;
   setSentences: (sentences: string[]) => void;
   setSelectedHints: (hints: string[]) => void;
-  setMediaTemp: (uri: string | null, type: 'photo' | 'voice' | null) => void;
   clearSession: () => void;
 }
 
@@ -42,13 +38,11 @@ export const useSessionStore = create<SessionStore>((set) => ({
         author,
         level,
         card: null,
-        draftId: draftId ?? Crypto.randomUUID(),
+        draftId: draftId ?? crypto.randomUUID(),
         inputMode: 'text',
         sentences: [],
         selectedHints: [],
         sessionIndex,
-        mediaTempUri: null,
-        mediaTempType: null,
       },
     }),
   setCard: (card) =>
@@ -59,7 +53,5 @@ export const useSessionStore = create<SessionStore>((set) => ({
     set((state) => (state.session ? { session: { ...state.session, sentences } } : state)),
   setSelectedHints: (selectedHints) =>
     set((state) => (state.session ? { session: { ...state.session, selectedHints } } : state)),
-  setMediaTemp: (mediaTempUri, mediaTempType) =>
-    set((state) => (state.session ? { session: { ...state.session, mediaTempUri, mediaTempType } } : state)),
   clearSession: () => set({ session: null }),
 }));

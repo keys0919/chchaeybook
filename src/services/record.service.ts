@@ -1,6 +1,9 @@
-import { getDb } from '../db/client';
-import { insertRecord, updateSyncStatus, getRecordsByChild, getRecordsByBook as dbGetRecordsByBook } from '../db/queries/records';
-import { supabase } from './supabase';
+// 기록 서비스 — localStorage 기반 (Supabase 제거)
+import {
+  insertRecord,
+  getRecordsByChild,
+  getRecordsByBook as dbGetByBook,
+} from '../db/index';
 import type { ReadingRecord } from '../types/db.types';
 
 export interface BookshelfEntry {
@@ -18,83 +21,76 @@ export interface StampEntry {
 }
 
 export async function createRecord(record: ReadingRecord): Promise<void> {
-  const db = await getDb();
-  await insertRecord(db, record);
-  try {
-    const { error } = await supabase.from('reading_records').insert({
-      record_id: record.record_id,
-      child_id: record.child_id,
-      book_title: record.book_title,
-      author: record.author,
-      read_date: record.read_date,
-      level: record.level,
-      card_id: record.card_id,
-      sentences: record.sentences,
-      selected_hints: record.selected_hints.length ? record.selected_hints : null,
-      badges: record.badges.length ? record.badges : null,
-      session_index: record.session_index,
-    });
-    if (error) throw error;
-    await updateSyncStatus(db, record.record_id, 'synced');
-  } catch {
-    await updateSyncStatus(db, record.record_id, 'pending');
-  }
+  insertRecord(record);
 }
 
 export async function getBookshelf(childId: string): Promise<BookshelfEntry[]> {
-  const db = await getDb();
-  const rows = await db.getAllAsync<{
-    book_title: string;
-    record_count: number;
-    last_read: string;
-    all_badges: string | null;
-  }>(
-    `SELECT book_title,
-            COUNT(*) as record_count,
-            MAX(created_at) as last_read,
-            GROUP_CONCAT(badges, '|SEP|') as all_badges
-     FROM reading_records
-     WHERE child_id = ?
-     GROUP BY book_title
-     ORDER BY last_read DESC`,
-    [childId]
-  );
-  return rows.map((r) => {
-    let totalStamps = 0;
-    if (r.all_badges) {
-      for (const part of r.all_badges.split('|SEP|')) {
-        try { totalStamps += (JSON.parse(part) as unknown[]).length; } catch {}
-      }
+  const records = getRecordsByChild(childId);
+  const map = new Map<string, BookshelfEntry>();
+  for (const r of records) {
+    const entry = map.get(r.book_title);
+    if (entry) {
+      entry.record_count += 1;
+      entry.total_stamps += r.badges.length;
+      if (r.created_at > entry.last_read) entry.last_read = r.created_at;
+    } else {
+      map.set(r.book_title, {
+        book_title: r.book_title,
+        record_count: 1,
+        last_read: r.created_at,
+        total_stamps: r.badges.length,
+      });
     }
-    return { book_title: r.book_title, record_count: r.record_count, last_read: r.last_read, total_stamps: totalStamps };
-  });
+  }
+  return Array.from(map.values()).sort((a, b) => b.last_read.localeCompare(a.last_read));
 }
 
-export async function getRecordsByBook(childId: string, bookTitle: string): Promise<ReadingRecord[]> {
-  const db = await getDb();
-  return dbGetRecordsByBook(db, childId, bookTitle);
+export async function getRecordsByBook(
+  childId: string,
+  bookTitle: string
+): Promise<ReadingRecord[]> {
+  return dbGetByBook(childId, bookTitle);
 }
 
 export async function getAllStamps(childId: string): Promise<StampEntry[]> {
-  const db = await getDb();
-  const records = await getRecordsByChild(db, childId);
+  const records = getRecordsByChild(childId);
   const stamps: StampEntry[] = [];
   for (const r of records) {
     for (const badge of r.badges) {
-      stamps.push({ record_id: r.record_id, book_title: r.book_title, read_date: r.read_date, badge });
+      stamps.push({
+        record_id: r.record_id,
+        book_title: r.book_title,
+        read_date: r.read_date,
+        badge,
+      });
     }
   }
   return stamps;
 }
 
+export async function getChildWeeklyCount(childId: string): Promise<number> {
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  return getRecordsByChild(childId).filter(
+    (r) => r.created_at >= startOfWeek.toISOString()
+  ).length;
+}
+
+export async function getChildLevelCount(childId: string, level: number): Promise<number> {
+  return getRecordsByChild(childId).filter((r) => r.level === level).length;
+}
+
 export async function getRecentBooks(childId: string, limit = 5): Promise<string[]> {
-  const db = await getDb();
-  const rows = await db.getAllAsync<{ book_title: string }>(
-    `SELECT DISTINCT book_title FROM reading_records
-     WHERE child_id = ?
-     ORDER BY created_at DESC
-     LIMIT ?`,
-    [childId, limit]
-  );
-  return rows.map((r) => r.book_title);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const r of getRecordsByChild(childId)) {
+    if (!seen.has(r.book_title)) {
+      seen.add(r.book_title);
+      result.push(r.book_title);
+    }
+    if (result.length >= limit) break;
+  }
+  return result;
 }

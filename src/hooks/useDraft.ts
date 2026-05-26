@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
 import type { PartialInput } from '../types/db.types';
 import { saveDraft, isMeaningful } from '../services/draft.service';
 
@@ -18,10 +17,10 @@ export function useDraft({ draftId, childId, bookTitle, level, cardId, cardType 
   const createdAtRef = useRef(new Date().toISOString());
 
   const save = useCallback(
-    async (input: PartialInput | null) => {
+    (input: PartialInput | null) => {
       const now = new Date().toISOString();
       const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await saveDraft({
+      saveDraft({
         draft_id: draftId,
         child_id: childId,
         book_title: bookTitle,
@@ -48,17 +47,10 @@ export function useDraft({ draftId, childId, bookTitle, level, cardId, cardType 
   );
 
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
-      if (state === 'background' || state === 'inactive') {
-        if (timerRef.current) clearTimeout(timerRef.current);
-        save(latestInputRef.current);
-      }
-    });
     return () => {
-      sub.remove();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [save]);
+  }, []);
 
   return { scheduleSave, saveImmediate: save };
 }

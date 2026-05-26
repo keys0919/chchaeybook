@@ -1,10 +1,8 @@
-// 아이 탭바 (4탭) — write/card, write/complete는 탭바 숨김
 import { Tabs } from 'expo-router';
+import { Sun, PenLine, BookMarked, Award, Settings } from 'lucide-react-native';
 import { ChildColors, ComponentSize } from '../../src/design/tokens';
-import { usePraiseStore } from '../../src/stores/praise.store';
 
 export default function ChildLayout() {
-  const { unseenCount } = usePraiseStore();
   return (
     <Tabs
       screenOptions={{
@@ -15,36 +13,56 @@ export default function ChildLayout() {
           backgroundColor: ChildColors.surface1,
           borderTopWidth: 1,
           borderTopColor: ChildColors.divider,
-          height: ComponentSize.tabBarHeight,
+          height: ComponentSize.tabBarHeight + 16,
+          paddingBottom: 10,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 14,
+          fontFamily: 'Pretendard-Medium',
+          fontSize: 11,
           fontWeight: '500',
-        },
-        tabBarIconStyle: {
-          marginBottom: 2,
+          marginTop: 2,
         },
       }}
     >
-      <Tabs.Screen name="today" options={{ title: '오늘' }} />
-      <Tabs.Screen name="write/book-input" options={{ title: '쓰기' }} />
-      <Tabs.Screen name="bookshelf/index" options={{ title: '책장' }} />
+      <Tabs.Screen
+        name="today"
+        options={{
+          title: '오늘',
+          tabBarIcon: ({ color }) => <Sun size={22} color={color} strokeWidth={1.8} />,
+        }}
+      />
+      <Tabs.Screen
+        name="write/book-input"
+        options={{
+          title: '쓰기',
+          tabBarIcon: ({ color }) => <PenLine size={22} color={color} strokeWidth={1.8} />,
+        }}
+      />
+      <Tabs.Screen
+        name="bookshelf/index"
+        options={{
+          title: '책장',
+          tabBarIcon: ({ color }) => <BookMarked size={22} color={color} strokeWidth={1.8} />,
+        }}
+      />
       <Tabs.Screen
         name="stamps"
         options={{
           title: '도장',
-          tabBarBadge: unseenCount > 0 ? unseenCount : undefined,
+          tabBarIcon: ({ color }) => <Award size={22} color={color} strokeWidth={1.8} />,
         }}
       />
-      {/* 탭바 숨김 화면 */}
       <Tabs.Screen
-        name="write/card"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
+        name="settings"
+        options={{
+          title: '설정',
+          tabBarIcon: ({ color }) => <Settings size={22} color={color} strokeWidth={1.8} />,
+        }}
       />
-      <Tabs.Screen
-        name="write/complete"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
-      />
+      <Tabs.Screen name="write/card" options={{ href: null }} />
+      <Tabs.Screen name="write/complete" options={{ href: null }} />
+      <Tabs.Screen name="bookshelf/[bookTitle]" options={{ href: null }} />
     </Tabs>
   );
 }

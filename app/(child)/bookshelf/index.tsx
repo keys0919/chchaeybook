@@ -12,7 +12,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChildColors, Spacing, Radius, Shadow, CopyTokens, ComponentSize } from '../../../src/design/tokens';
 import { TextStyle, ModeTypography } from '../../../src/design/typography';
-import { useAuthStore } from '../../../src/stores/auth.store';
+import { useProfileStore } from '../../../src/stores/profile.store';
 import { getBookshelf, type BookshelfEntry } from '../../../src/services/record.service';
 
 function formatDate(isoStr: string): string {
@@ -22,19 +22,19 @@ function formatDate(isoStr: string): string {
 
 export default function BookshelfScreen() {
   const router = useRouter();
-  const { childProfile } = useAuthStore();
+  const { profile } = useProfileStore();
   const [books, setBooks] = useState<BookshelfEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      if (!childProfile) return;
+      if (!profile) return;
       setLoading(true);
-      getBookshelf(childProfile.child_id)
+      getBookshelf(profile.child_id)
         .then(setBooks)
         .catch(() => setBooks([]))
         .finally(() => setLoading(false));
-    }, [childProfile])
+    }, [profile])
   );
 
   const handleBook = (bookTitle: string) => {
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: ChildColors.surface1,
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    shadowColor: '#000',
+    shadowColor: '#1A1A1A',
     ...Shadow.level1,
   },
   cardBody: { flex: 1 },

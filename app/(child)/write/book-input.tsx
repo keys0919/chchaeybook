@@ -1,4 +1,3 @@
-// D-2 책 입력 — 직접 입력 / 최근 책 선택
 import { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,13 +13,13 @@ import {
 import { useRouter } from 'expo-router';
 import { ChildColors, Spacing, Radius, ComponentSize, Shadow } from '../../../src/design/tokens';
 import { TextStyle, ModeTypography } from '../../../src/design/typography';
-import { useAuthStore } from '../../../src/stores/auth.store';
+import { useProfileStore } from '../../../src/stores/profile.store';
 import { useSessionStore } from '../../../src/stores/session.store';
 import { getRecentBooks } from '../../../src/services/record.service';
 
 export default function BookInputScreen() {
   const router = useRouter();
-  const { childProfile } = useAuthStore();
+  const { profile } = useProfileStore();
   const { startSession } = useSessionStore();
 
   const [bookTitle, setBookTitle] = useState('');
@@ -29,15 +28,13 @@ export default function BookInputScreen() {
   const titleRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (!childProfile) return;
-    getRecentBooks(childProfile.child_id)
-      .then(setRecentBooks)
-      .catch(() => {});
-  }, [childProfile]);
+    if (!profile) return;
+    getRecentBooks(profile.child_id).then(setRecentBooks).catch(() => {});
+  }, [profile]);
 
   const handleStart = () => {
-    if (!bookTitle.trim() || !childProfile) return;
-    startSession(bookTitle.trim(), author.trim() || null, childProfile.current_level);
+    if (!bookTitle.trim() || !profile) return;
+    startSession(bookTitle.trim(), author.trim() || null, profile.current_level);
     router.push('/write/card');
   };
 
@@ -60,7 +57,6 @@ export default function BookInputScreen() {
           <Text style={styles.heading}>어떤 책을 읽었어요?</Text>
           <View style={{ height: Spacing.lg }} />
 
-          {/* 책 제목 입력 */}
           <Text style={styles.label}>책 제목</Text>
           <TextInput
             ref={titleRef}
@@ -75,7 +71,6 @@ export default function BookInputScreen() {
 
           <View style={{ height: Spacing.md }} />
 
-          {/* 작가 입력 (선택) */}
           <Text style={styles.label}>작가 <Text style={styles.optional}>(선택)</Text></Text>
           <TextInput
             style={styles.input}
@@ -87,7 +82,6 @@ export default function BookInputScreen() {
             onSubmitEditing={handleStart}
           />
 
-          {/* 최근 책 목록 */}
           {recentBooks.length > 0 && (
             <View style={{ marginTop: Spacing.lg }}>
               <Text style={styles.recentLabel}>최근에 읽은 책</Text>
@@ -147,7 +141,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     marginBottom: Spacing.xs,
     ...Shadow.level1,
-    shadowColor: '#000',
+    shadowColor: '#1A1A1A',
   },
   recentItemText: { ...TextStyle.body, color: ChildColors.textPrimary, flex: 1 },
   recentItemArrow: { ...TextStyle.body, color: ChildColors.textTertiary, marginLeft: Spacing.sm },

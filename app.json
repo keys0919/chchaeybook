@@ -28,34 +28,18 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "static"
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite",
-      "expo-secure-store",
-      "expo-audio",
-      "expo-web-browser",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#FF7340"
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "사진 기록을 저장하기 위해 앨범 접근 권한이 필요해요.",
-          "cameraPermission": "사진을 찍어 기록하기 위해 카메라 권한이 필요해요."
-        }
-      ],
       "expo-asset",
       "expo-dev-client",
-      "react-native-purchases"
+      "expo-font"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/chchaeybook"
     }
   }
 }

@@ -1,4 +1,3 @@
-// D-7 도장·배지 화면 — S1(칭찬 없음) / S2(칭찬 미확인) / S3(칭찬 확인 완료)
 import { useCallback, useState } from 'react';
 import {
   View,
@@ -12,10 +11,8 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChildColors, Spacing, Radius, Shadow, CopyTokens, ComponentSize } from '../../src/design/tokens';
 import { TextStyle, ModeTypography } from '../../src/design/typography';
-import { useAuthStore } from '../../src/stores/auth.store';
-import { usePraiseStore } from '../../src/stores/praise.store';
+import { useProfileStore } from '../../src/stores/profile.store';
 import { getAllStamps, type StampEntry } from '../../src/services/record.service';
-import { markAllPraiseSeen } from '../../src/services/praise.service';
 
 function formatDate(isoStr: string): string {
   const d = new Date(isoStr);
@@ -24,26 +21,19 @@ function formatDate(isoStr: string): string {
 
 export default function StampsScreen() {
   const router = useRouter();
-  const { childProfile } = useAuthStore();
-  const { unseenCount, clearUnseen } = usePraiseStore();
+  const { profile } = useProfileStore();
   const [stamps, setStamps] = useState<StampEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      if (!childProfile) return;
+      if (!profile) return;
       setLoading(true);
-      getAllStamps(childProfile.child_id)
+      getAllStamps(profile.child_id)
         .then(setStamps)
         .catch(() => setStamps([]))
         .finally(() => setLoading(false));
-
-      // D-7 진입 시 칭찬 확인 처리
-      if (unseenCount > 0) {
-        markAllPraiseSeen(childProfile.child_id).catch(() => {});
-        clearUnseen();
-      }
-    }, [childProfile, unseenCount, clearUnseen])
+    }, [profile])
   );
 
   if (loading) {
@@ -144,7 +134,7 @@ const styles = StyleSheet.create({
     backgroundColor: ChildColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#1A1A1A',
     ...Shadow.level1,
   },
   stampEmoji: { fontSize: 22 },

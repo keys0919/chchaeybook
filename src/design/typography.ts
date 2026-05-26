@@ -36,36 +36,42 @@ export const FontFamily = {
 // base-hybrid scale
 export const TextStyle = {
   caption: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     fontWeight: '400' as const,
     lineHeight: 12 * 1.4,
     letterSpacing: 0.2,
   },
   label: {
+    fontFamily: FontFamily.medium,
     fontSize: 14,
     fontWeight: '500' as const,
     lineHeight: 14 * 1.5,
     letterSpacing: 0,
   },
   body: {
+    fontFamily: FontFamily.regular,
     fontSize: 16,
     fontWeight: '400' as const,
     lineHeight: 16 * 1.6,
     letterSpacing: 0,
   },
   title: {
+    fontFamily: FontFamily.semibold,
     fontSize: 18,
     fontWeight: '600' as const,
     lineHeight: 18 * 1.5,
     letterSpacing: 0,
   },
   heading2: {
+    fontFamily: FontFamily.bold,
     fontSize: 20,
     fontWeight: '700' as const,
     lineHeight: 20 * 1.4,
     letterSpacing: -0.2,
   },
   heading1: {
+    fontFamily: FontFamily.bold,
     fontSize: 24,
     fontWeight: '700' as const,
     lineHeight: 24 * 1.3,
@@ -73,6 +79,7 @@ export const TextStyle = {
   },
   // 책쏙 전용 확장
   stampText: {
+    fontFamily: FontFamily.bold,
     fontSize: 11,
     fontWeight: '700' as const,
     lineHeight: 11 * 1.2,
@@ -84,6 +91,7 @@ export const TextStyle = {
 export const ModeTypography = {
   // D-3 카드 질문 텍스트 override (아이 모드 전용)
   childCardQuestion: {
+    fontFamily: FontFamily.bold,
     fontSize: 24,
     fontWeight: '700' as const,
     lineHeight: 24 * 1.3,
@@ -91,18 +99,21 @@ export const ModeTypography = {
   },
   // D-4 완성 문장 (필기체)
   completionSentence: {
+    fontFamily: FontFamily.handwriting,
     fontSize: 18,
     lineHeight: 18 * 1.6,
     letterSpacing: 0,
   },
   // CTA 버튼 레이블 (공통)
   buttonLabel: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
     fontWeight: '700' as const,
     lineHeight: 16 * 1.5,
   },
   // 아이 모드 힌트 텍스트
   childHint: {
+    fontFamily: FontFamily.semibold,
     fontSize: 16,
     fontWeight: '600' as const,
     lineHeight: 16 * 1.6,

@@ -1,35 +1,28 @@
-// D-4 완성 카드 + 도장 애니메이션 — ReadingRecord 저장 + [부모님께 보내기]
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
+  TouchableWithoutFeedback,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   SafeAreaView,
   Animated,
-  Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as Crypto from 'expo-crypto';
 import {
   ChildColors,
   Spacing,
   Radius,
   ComponentSize,
-  Shadow,
   WarmShadow,
+  CopyTokens,
 } from '../../../src/design/tokens';
-import { TextStyle, ModeTypography } from '../../../src/design/typography';
+import { TextStyle, ModeTypography, FontFamily } from '../../../src/design/typography';
 import { useSessionStore } from '../../../src/stores/session.store';
-import { useAuthStore } from '../../../src/stores/auth.store';
-import { usePraiseStore } from '../../../src/stores/praise.store';
-import { createRecord } from '../../../src/services/record.service';
+import { useProfileStore } from '../../../src/stores/profile.store';
+import { createRecord, getChildWeeklyCount } from '../../../src/services/record.service';
 import { removeDraft } from '../../../src/services/draft.service';
-import { savePhotoLocally, saveVoiceLocally, shareMediaToParent } from '../../../src/services/media.service';
-import { sendPushToUser, scheduleLocalNotification } from '../../../src/services/notification.service';
-import { useNotificationStore } from '../../../src/stores/notification.store';
 
 const STAMP_EMOJI = ['⭐', '🌟', '🏅', '📚', '✨', '🎖', '🥇'];
 
@@ -38,38 +31,59 @@ function pickStamp(level: number, sessionIndex: number): string {
   return STAMP_EMOJI[idx];
 }
 
-type ShareState = 'idle' | 'sharing' | 'done' | 'failed';
+function pickPraiseText(): string {
+  const idx = Math.floor(Math.random() * CopyTokens.STAMP_TEXTS.length);
+  return CopyTokens.STAMP_TEXTS[idx];
+}
 
 export default function CompleteScreen() {
   const router = useRouter();
   const { session, clearSession } = useSessionStore();
-  const { childProfile } = useAuthStore();
-  const { unseenCount } = usePraiseStore();
+  const { profile } = useProfileStore();
 
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const cardScale = useRef(new Animated.Value(1)).current;
   const stampScale = useRef(new Animated.Value(0)).current;
   const stampOpacity = useRef(new Animated.Value(0)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const stampTextOpacity = useRef(new Animated.Value(0)).current;
+  const stampTextTranslateY = useRef(new Animated.Value(8)).current;
+  const praiseOpacity = useRef(new Animated.Value(0)).current;
+  const ctaOpacity = useRef(new Animated.Value(0)).current;
 
+  const [displayedText, setDisplayedText] = useState('');
+  const [praiseText] = useState(() => pickPraiseText());
+  const [sequenceDone, setSequenceDone] = useState(false);
+  const sequenceDoneRef = useRef(false);
   const [saved, setSaved] = useState(false);
-  const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
-  const [savedMediaId, setSavedMediaId] = useState<string | null>(null);
-  const [savedLocalPath, setSavedLocalPath] = useState<string | null>(null);
-  const [shareState, setShareState] = useState<ShareState>('idle');
+  const [weeklyCount, setWeeklyCount] = useState<number | null>(null);
 
-  const hasMedia = Boolean(session?.mediaTempUri && session?.mediaTempType);
+  const fullSentence = session?.sentences[0] ?? '';
+
+  const finishSequence = useCallback(() => {
+    if (sequenceDoneRef.current) return;
+    sequenceDoneRef.current = true;
+    setDisplayedText(fullSentence);
+    cardOpacity.setValue(1);
+    cardScale.setValue(1);
+    stampScale.setValue(1);
+    stampOpacity.setValue(1);
+    stampTextOpacity.setValue(1);
+    stampTextTranslateY.setValue(0);
+    praiseOpacity.setValue(1);
+    ctaOpacity.setValue(1);
+    setSequenceDone(true);
+  }, [fullSentence]);
 
   useEffect(() => {
-    if (!session || !childProfile || saved) return;
+    if (!session || !profile || saved) return;
 
     setSaved(true);
-    const recordId = Crypto.randomUUID();
-    setSavedRecordId(recordId);
-
+    const recordId = crypto.randomUUID();
     const stamp = pickStamp(session.level, session.sessionIndex);
     const now = new Date().toISOString();
     const record = {
       record_id: recordId,
-      child_id: childProfile.child_id,
+      child_id: profile.child_id,
       book_title: session.bookTitle,
       author: session.author,
       read_date: now.slice(0, 10),
@@ -85,77 +99,74 @@ export default function CompleteScreen() {
     };
 
     createRecord(record).then(() => {
-      const { prefs } = useNotificationStore.getState();
-      if (prefs.newRecord && childProfile.parent_id) {
-        sendPushToUser(
-          childProfile.parent_id,
-          '새 독서 기록이 도착했어요 📚',
-          `${childProfile.nickname}이(가) 책을 읽었어요. 확인해보세요!`,
-          { screen: 'parent-record', recordId }
-        ).catch(() => {});
-      }
+      getChildWeeklyCount(profile.child_id).then(setWeeklyCount).catch(() => {});
     }).catch(() => {});
-    if (session.draftId) removeDraft(session.draftId).catch(() => {});
 
-    // 미디어 로컬 저장
-    if (session.mediaTempUri && session.mediaTempType) {
-      const saveFn = session.mediaTempType === 'photo' ? savePhotoLocally : saveVoiceLocally;
-      saveFn(session.mediaTempUri, childProfile.child_id, recordId)
-        .then((item) => {
-          setSavedMediaId(item.media_id);
-          setSavedLocalPath(item.local_path);
-        })
-        .catch(() => {});
-    }
+    if (session.draftId) removeDraft(session.draftId);
 
-    // 카드 fade-in
-    Animated.timing(cardOpacity, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.sequence([
-        Animated.timing(stampOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
-        Animated.spring(stampScale, {
-          toValue: 1,
-          friction: 4,
-          tension: 80,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let typingInterval: ReturnType<typeof setInterval> | null = null;
+
+    Animated.timing(cardOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+
+    const typingTimer = setTimeout(() => {
+      const text = fullSentence.slice(0, 30);
+      if (!text) {
+        runStampSequence(timers);
+        return;
+      }
+      let idx = 0;
+      typingInterval = setInterval(() => {
+        idx++;
+        setDisplayedText(text.slice(0, idx));
+        if (idx >= text.length) {
+          if (typingInterval) clearInterval(typingInterval);
+          const shakeTimer = setTimeout(() => {
+            Animated.sequence([
+              Animated.timing(cardScale, { toValue: 1.03, duration: 75, useNativeDriver: true }),
+              Animated.timing(cardScale, { toValue: 1.0, duration: 75, useNativeDriver: true }),
+            ]).start(() => runStampSequence(timers));
+          }, 100);
+          timers.push(shakeTimer);
+        }
+      }, 40);
+    }, 200);
+    timers.push(typingTimer);
+
+    return () => {
+      if (typingInterval) clearInterval(typingInterval);
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
-  const handleShare = async () => {
-    if (!savedMediaId || !savedLocalPath || !savedRecordId || !childProfile) return;
-    const parentId = childProfile.parent_id;
-    if (!parentId) return;
+  function runStampSequence(timers: ReturnType<typeof setTimeout>[]) {
+    const t1 = setTimeout(() => {
+      Animated.timing(stampOpacity, { toValue: 1, duration: 50, useNativeDriver: true }).start();
+      Animated.spring(stampScale, { toValue: 1, friction: 4, tension: 80, useNativeDriver: true }).start();
+    }, 100);
+    timers.push(t1);
 
-    setShareState('sharing');
-    try {
-      await shareMediaToParent(
-        savedMediaId,
-        savedLocalPath,
-        session!.mediaTempType!,
-        savedRecordId,
-        childProfile.child_id,
-        parentId
-      );
-      setShareState('done');
-      const { prefs } = useNotificationStore.getState();
-      if (prefs.mediaShared) {
-        const typeLabel = session!.mediaTempType === 'photo' ? '사진' : '녹음';
-        sendPushToUser(
-          parentId,
-          `${typeLabel}을 보냈어요 ${session!.mediaTempType === 'photo' ? '📷' : '🎙'}`,
-          `${childProfile.nickname}이(가) ${typeLabel}을 공유했어요!`,
-          { screen: 'parent-record', recordId: savedRecordId }
-        ).catch(() => {});
-      }
-    } catch {
-      setShareState('failed');
-    }
-  };
+    const t2 = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(stampTextOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.timing(stampTextTranslateY, { toValue: 0, duration: 150, useNativeDriver: true }),
+      ]).start();
+    }, 600);
+    timers.push(t2);
+
+    const t3 = setTimeout(() => {
+      Animated.timing(praiseOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+    }, 850);
+    timers.push(t3);
+
+    const t4 = setTimeout(() => {
+      Animated.timing(ctaOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start(() => {
+        sequenceDoneRef.current = true;
+        setSequenceDone(true);
+      });
+    }, 1000);
+    timers.push(t4);
+  }
 
   const handleWriteMore = () => {
     if (!session) return;
@@ -184,85 +195,58 @@ export default function CompleteScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {unseenCount > 0 ? (
-        <TouchableOpacity style={styles.praiseBanner} onPress={() => router.push('/stamps')}>
-          <Text style={styles.praiseBannerText}>🎉 부모님 칭찬이 도착했어요!</Text>
-        </TouchableOpacity>
-      ) : null}
+      <TouchableWithoutFeedback onPress={!sequenceDone ? finishSequence : undefined}>
+        <View style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.content} scrollEnabled={sequenceDone}>
+            {/* 완성 카드 */}
+            <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
+              <Text style={styles.cardBookTitle} numberOfLines={1}>{session.bookTitle}</Text>
+              <View style={{ height: Spacing.sm }} />
+              <Text style={styles.cardSentence}>{displayedText}</Text>
+              {session.sentences.length > 1 ? (
+                <View style={{ marginTop: Spacing.sm }}>
+                  {session.sentences.slice(1).map((s, i) => (
+                    <Text key={i} style={styles.cardSentence}>{s}</Text>
+                  ))}
+                </View>
+              ) : null}
+            </Animated.View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Animated.View style={[styles.completionCard, { opacity: cardOpacity }]}>
-          <Text style={styles.bookTitle} numberOfLines={2}>{session.bookTitle}</Text>
-          {session.author ? (
-            <Text style={styles.bookAuthor}>{session.author}</Text>
-          ) : null}
+            <View style={{ height: Spacing.xl }} />
 
-          <View style={styles.divider} />
+            {/* 도장 */}
+            <View style={styles.stampArea}>
+              <Animated.View style={{ opacity: stampOpacity, transform: [{ scale: stampScale }] }}>
+                <Text style={styles.stampEmoji}>{stamp}</Text>
+              </Animated.View>
+              <Animated.View style={{ opacity: stampTextOpacity, transform: [{ translateY: stampTextTranslateY }] }}>
+                <Text style={styles.stampLabel}>
+                  {weeklyCount !== null ? `이번 주 ${weeklyCount}번째 기록!` : '도장 획득!'}
+                </Text>
+              </Animated.View>
+            </View>
 
-          {session.sentences.length > 0 ? (
-            session.sentences.map((s, i) => (
-              <View key={i} style={styles.sentenceRow}>
-                <Text style={styles.quoteBar} />
-                <Text style={styles.sentenceText}>{s}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.mediaLabel}>
-              {session.mediaTempType === 'photo' ? '📷 사진 기록' : '🎙 녹음 기록'}
-            </Text>
-          )}
-        </Animated.View>
+            <View style={{ height: Spacing.lg }} />
 
-        <Animated.View
-          style={[
-            styles.stampWrap,
-            { opacity: stampOpacity, transform: [{ scale: stampScale }] },
-          ]}
-        >
-          <View style={styles.stampCircle}>
-            <Text style={styles.stampEmoji}>{stamp}</Text>
-          </View>
-          <Text style={styles.stampLabel}>도장 획득!</Text>
-        </Animated.View>
+            {/* 칭찬 문구 */}
+            <Animated.View style={{ opacity: praiseOpacity, alignItems: 'center' }}>
+              <Text style={styles.praiseText}>{praiseText}</Text>
+            </Animated.View>
 
-        {/* 부모님께 보내기 */}
-        {hasMedia ? (
-          <View style={styles.shareSection}>
-            {shareState === 'idle' ? (
-              <TouchableOpacity
-                style={styles.shareBtn}
-                onPress={handleShare}
-                disabled={!savedMediaId}
-              >
-                <Text style={styles.shareBtnText}>📤 부모님께 보내기</Text>
+            <View style={{ height: Spacing.xl }} />
+
+            {/* CTA */}
+            <Animated.View style={{ opacity: ctaOpacity, gap: Spacing.md }}>
+              <TouchableOpacity style={styles.primaryBtn} onPress={handleWriteMore}>
+                <Text style={styles.primaryBtnText}>한 문장 더 쓰기</Text>
               </TouchableOpacity>
-            ) : shareState === 'sharing' ? (
-              <View style={styles.shareStatusRow}>
-                <ActivityIndicator color={ChildColors.primary} size="small" />
-                <Text style={styles.shareStatusText}>보내는 중...</Text>
-              </View>
-            ) : shareState === 'done' ? (
-              <Text style={styles.shareDoneText}>✓ 부모님께 전달됐어요!</Text>
-            ) : (
-              <View style={styles.shareStatusRow}>
-                <Text style={styles.shareFailText}>전송 실패</Text>
-                <TouchableOpacity onPress={handleShare}>
-                  <Text style={styles.retryText}>다시 시도</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        ) : null}
-
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.primaryBtn} onPress={handleWriteMore}>
-            <Text style={styles.primaryBtnText}>한 문장 더 쓰기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={handleHome}>
-            <Text style={styles.secondaryBtnText}>홈으로</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={handleHome}>
+                <Text style={styles.secondaryBtnText}>홈으로</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </ScrollView>
         </View>
-      </ScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -270,86 +254,44 @@ export default function CompleteScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: ChildColors.background },
   content: {
-    padding: Spacing['2xl'],
-    alignItems: 'center',
+    paddingHorizontal: Spacing['2xl'],
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.xl,
+    alignItems: 'center',
   },
-  completionCard: {
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyText: { ...TextStyle.body, color: ChildColors.textSecondary },
+  card: {
     width: '100%',
     backgroundColor: ChildColors.surface1,
     borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1.5,
-    borderColor: ChildColors.primaryLight,
-    ...(Platform.OS === 'ios' ? WarmShadow : { elevation: 3 }),
-    marginTop: Spacing.lg,
+    padding: 20,
+    ...WarmShadow,
+    shadowColor: '#1A1A1A',
   },
-  bookTitle: { ...TextStyle.heading2, color: ChildColors.textPrimary, textAlign: 'center' },
-  bookAuthor: {
-    ...TextStyle.caption,
-    color: ChildColors.textSecondary,
-    textAlign: 'center',
+  cardBookTitle: { ...TextStyle.caption, color: ChildColors.textTertiary },
+  cardSentence: {
+    fontFamily: FontFamily.bold,
+    fontSize: 18,
+    lineHeight: 28,
+    color: ChildColors.textPrimary,
     marginTop: 4,
   },
-  divider: {
-    height: 1,
-    backgroundColor: ChildColors.divider,
-    marginVertical: Spacing.md,
-  },
-  sentenceRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  quoteBar: {
-    width: 3,
-    backgroundColor: ChildColors.primary,
-    borderRadius: 2,
-    minHeight: 20,
-    marginTop: 3,
-  },
-  sentenceText: { ...TextStyle.body, color: ChildColors.textPrimary, flex: 1, lineHeight: 26 },
-  mediaLabel: {
-    ...TextStyle.body,
+  stampArea: { alignItems: 'center', gap: Spacing.sm },
+  stampEmoji: { fontSize: 72 },
+  stampLabel: {
+    ...TextStyle.label,
     color: ChildColors.textSecondary,
     textAlign: 'center',
-    paddingVertical: Spacing.sm,
   },
-  stampWrap: { alignItems: 'center', marginTop: Spacing.xl, gap: Spacing.sm },
-  stampCircle: {
-    width: ComponentSize.stampBadgeLarge,
-    height: ComponentSize.stampBadgeLarge,
-    borderRadius: Radius.full,
-    backgroundColor: ChildColors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+  praiseText: {
+    ...TextStyle.title,
+    color: ChildColors.primary,
+    textAlign: 'center',
+    fontWeight: '700',
   },
-  stampEmoji: { fontSize: 28 },
-  stampLabel: { ...TextStyle.label, color: ChildColors.textSecondary },
-  shareSection: {
-    width: '100%',
-    marginTop: Spacing.lg,
-    alignItems: 'center',
-  },
-  shareBtn: {
-    width: '100%',
-    height: ComponentSize.buttonHeight,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: ChildColors.primary,
-    backgroundColor: ChildColors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  shareBtnText: { ...ModeTypography.buttonLabel, color: ChildColors.primary },
-  shareStatusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  shareStatusText: { ...TextStyle.label, color: ChildColors.textSecondary },
-  shareDoneText: { ...TextStyle.label, color: ChildColors.primary },
-  shareFailText: { ...TextStyle.label, color: '#FF5C5C' },
-  retryText: { ...TextStyle.label, color: ChildColors.primary, textDecorationLine: 'underline' },
-  actions: { width: '100%', marginTop: Spacing.lg, gap: Spacing.sm },
   primaryBtn: {
+    width: '100%',
     height: ComponentSize.buttonHeight,
     backgroundColor: ChildColors.primary,
     borderRadius: Radius.md,
@@ -358,21 +300,12 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: { ...ModeTypography.buttonLabel, color: ChildColors.textOnPrimary },
   secondaryBtn: {
+    width: '100%',
     height: ComponentSize.buttonHeight,
+    backgroundColor: ChildColors.primaryLight,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: ChildColors.divider,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  secondaryBtnText: { ...ModeTypography.buttonLabel, color: ChildColors.textPrimary },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { ...TextStyle.body, color: ChildColors.textSecondary },
-  praiseBanner: {
-    backgroundColor: ChildColors.primary,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing['2xl'],
-    alignItems: 'center',
-  },
-  praiseBannerText: { ...TextStyle.label, color: ChildColors.textOnPrimary },
+  secondaryBtnText: { ...ModeTypography.buttonLabel, color: ChildColors.primary },
 });

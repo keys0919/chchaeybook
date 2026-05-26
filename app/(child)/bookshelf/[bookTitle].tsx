@@ -12,7 +12,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { ChildColors, Spacing, Radius, Shadow, ComponentSize } from '../../../src/design/tokens';
 import { TextStyle } from '../../../src/design/typography';
-import { useAuthStore } from '../../../src/stores/auth.store';
+import { useProfileStore } from '../../../src/stores/profile.store';
 import { getRecordsByBook } from '../../../src/services/record.service';
 import type { ReadingRecord } from '../../../src/types/db.types';
 
@@ -24,19 +24,19 @@ function formatDate(isoStr: string): string {
 export default function BookDetailScreen() {
   const router = useRouter();
   const { bookTitle } = useLocalSearchParams<{ bookTitle: string }>();
-  const { childProfile } = useAuthStore();
+  const { profile } = useProfileStore();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      if (!childProfile || !bookTitle) return;
+      if (!profile || !bookTitle) return;
       setLoading(true);
-      getRecordsByBook(childProfile.child_id, bookTitle)
+      getRecordsByBook(profile.child_id, bookTitle)
         .then(setRecords)
         .catch(() => setRecords([]))
         .finally(() => setLoading(false));
-    }, [childProfile, bookTitle])
+    }, [profile, bookTitle])
   );
 
   return (
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: ChildColors.surface1,
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    shadowColor: '#000',
+    shadowColor: '#1A1A1A',
     ...Shadow.level1,
   },
   cardHeader: {
