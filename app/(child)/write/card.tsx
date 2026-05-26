@@ -101,6 +101,7 @@ export default function CardScreen() {
         card={card}
         onComplete={handleComplete}
         onSkip={handleSkip}
+        isLastCard={isLastCard}
       />
     </SafeAreaView>
   );

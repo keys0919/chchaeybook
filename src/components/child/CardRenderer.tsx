@@ -15,9 +15,10 @@ interface CardRendererProps {
   card: Card;
   onComplete: () => void;
   onSkip: () => void;
+  isLastCard?: boolean;
 }
 
-export function CardRenderer({ card, onComplete, onSkip }: CardRendererProps) {
+export function CardRenderer({ card, onComplete, onSkip, isLastCard = true }: CardRendererProps) {
   const handleSkip = () => {
     Alert.alert('건너뛸까요?', '조금만 더 생각해볼까요?', [
       { text: '계속 해보기', style: 'cancel' },
@@ -80,7 +81,7 @@ export function CardRenderer({ card, onComplete, onSkip }: CardRendererProps) {
         {/* 액션 버튼 */}
         <View style={styles.actions}>
           <TouchableOpacity style={styles.primaryBtn} onPress={onComplete}>
-            <Text style={styles.primaryBtnText}>다 썼어요!</Text>
+            <Text style={styles.primaryBtnText}>{isLastCard ? '다 썼어요!' : '다음'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
             <Text style={styles.skipText}>건너뛰기</Text>
