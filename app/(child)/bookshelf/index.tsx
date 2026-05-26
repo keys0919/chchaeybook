@@ -1,4 +1,3 @@
-// D-5 책장 — book_title 그룹핑 뷰
 import { useCallback, useState } from 'react';
 import {
   View,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChildColors, Spacing, Radius, Shadow, CopyTokens, ComponentSize } from '../../../src/design/tokens';
-import { TextStyle, ModeTypography } from '../../../src/design/typography';
+import { TextStyle, ModeTypography, FontFamily } from '../../../src/design/typography';
 import { useProfileStore } from '../../../src/stores/profile.store';
 import { getBookshelf, type BookshelfEntry } from '../../../src/services/record.service';
 
@@ -55,8 +54,18 @@ export default function BookshelfScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.title}>책장</Text>
+      <View style={styles.pageHeader}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>책장</Text>
+          {books.length > 0 && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{books.length}권</Text>
+            </View>
+          )}
+        </View>
+        {books.length > 0 && (
+          <Text style={styles.subtitle}>읽은 책을 눌러 기록을 확인해요</Text>
+        )}
       </View>
 
       {books.length === 0 ? (
@@ -72,8 +81,10 @@ export default function BookshelfScreen() {
           data={books}
           keyExtractor={(item) => item.book_title}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => handleBook(item.book_title)}>
+            <TouchableOpacity style={styles.card} onPress={() => handleBook(item.book_title)} activeOpacity={0.7}>
+              <View style={styles.cardAccent} />
               <View style={styles.cardBody}>
                 <Text style={styles.bookTitle} numberOfLines={2}>{item.book_title}</Text>
                 <Text style={styles.meta}>
@@ -94,16 +105,53 @@ export default function BookshelfScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: ChildColors.background },
-  header: {
-    height: 56,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing['2xl'],
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  pageHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: ChildColors.divider,
+    gap: 4,
   },
-  title: { ...TextStyle.heading2, color: ChildColors.textPrimary },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing['2xl'], gap: Spacing.md },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  title: {
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    fontWeight: '700',
+    color: ChildColors.textPrimary,
+    letterSpacing: -0.5,
+    lineHeight: 35,
+  },
+  countBadge: {
+    backgroundColor: ChildColors.primaryLight,
+    borderRadius: Radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginTop: 4,
+  },
+  countBadgeText: {
+    ...TextStyle.caption,
+    color: ChildColors.primary,
+    fontWeight: '700',
+  },
+  subtitle: {
+    ...TextStyle.body,
+    color: ChildColors.textSecondary,
+  },
+
+  emptyWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing['2xl'],
+    gap: Spacing.md,
+  },
   emptyEmoji: { fontSize: 48 },
   emptyText: { ...TextStyle.body, color: ChildColors.textSecondary, textAlign: 'center' },
   ctaBtn: {
@@ -116,28 +164,55 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   ctaBtnText: { ...ModeTypography.buttonLabel, color: ChildColors.textOnPrimary },
+
   list: { padding: Spacing.md, gap: Spacing.sm },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: ChildColors.surface1,
     borderRadius: Radius.lg,
-    padding: Spacing.md,
+    overflow: 'hidden',
     shadowColor: '#1A1A1A',
     ...Shadow.level1,
   },
-  cardBody: { flex: 1 },
-  bookTitle: { ...TextStyle.body, color: ChildColors.textPrimary, fontWeight: '600' },
-  meta: { ...TextStyle.caption, color: ChildColors.textSecondary, marginTop: 4 },
+  cardAccent: {
+    width: 4,
+    alignSelf: 'stretch',
+    backgroundColor: ChildColors.primary,
+    opacity: 0.7,
+  },
+  cardBody: {
+    flex: 1,
+    padding: Spacing.md,
+    gap: 4,
+  },
+  bookTitle: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 16,
+    fontWeight: '600',
+    color: ChildColors.textPrimary,
+    lineHeight: 22,
+  },
+  meta: { ...TextStyle.caption, color: ChildColors.textSecondary },
   stampBadge: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     borderRadius: Radius.full,
     backgroundColor: ChildColors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: Spacing.md,
+    marginRight: Spacing.md,
   },
-  stampCount: { fontSize: 16, fontWeight: '700', color: ChildColors.primary },
-  stampLabel: { fontSize: 10, color: ChildColors.primary, fontWeight: '500' },
+  stampCount: {
+    fontFamily: FontFamily.bold,
+    fontSize: 16,
+    fontWeight: '700',
+    color: ChildColors.primary,
+  },
+  stampLabel: {
+    fontSize: 10,
+    fontFamily: FontFamily.medium,
+    color: ChildColors.primary,
+    fontWeight: '500',
+  },
 });

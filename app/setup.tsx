@@ -11,20 +11,17 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useProfileStore } from '../src/stores/profile.store';
 import { ChildColors, Spacing, Radius, ComponentSize } from '../src/design/tokens';
 import { TextStyle, ModeTypography } from '../src/design/typography';
 
 export default function SetupScreen() {
   const router = useRouter();
-  const { createProfile } = useProfileStore();
   const [nickname, setNickname] = useState('');
 
   const handleStart = () => {
     const trimmed = nickname.trim();
     if (!trimmed) return;
-    createProfile(trimmed);
-    router.replace('/(child)/today');
+    router.replace({ pathname: '/level-select' as any, params: { nickname: trimmed } });
   };
 
   return (

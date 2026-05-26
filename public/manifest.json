@@ -1,7 +1,7 @@
 {
-  "name": "책쏙",
-  "short_name": "책쏙",
-  "description": "나만의 독서록 앱",
+  "name": "째이 독서록",
+  "short_name": "째이 독서록",
+  "description": "째이의 독서록 앱",
   "start_url": "/chchaeybook/",
   "display": "standalone",
   "orientation": "portrait",
@@ -9,13 +9,13 @@
   "theme_color": "#FF7340",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/chchaeybook/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/chchaeybook/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"

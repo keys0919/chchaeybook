@@ -29,8 +29,9 @@ interface ProfileStore {
   profile: ChildProfile | null;
   isLoading: boolean;
   load: () => void;
-  createProfile: (nickname: string) => ChildProfile;
+  createProfile: (nickname: string, level?: number) => ChildProfile;
   levelUp: () => void;
+  setLevel: (level: number) => void;
 }
 
 export const useProfileStore = create<ProfileStore>((set, get) => ({
@@ -42,11 +43,11 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
     set({ profile, isLoading: false });
   },
 
-  createProfile: (nickname: string) => {
+  createProfile: (nickname: string, level: number = 1) => {
     const profile: ChildProfile = {
       child_id: crypto.randomUUID(),
       nickname,
-      current_level: 1,
+      current_level: level,
       grade: '4학년',
     };
     saveToStorage(profile);
@@ -59,6 +60,14 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
     if (!profile) return;
     if (profile.current_level >= MAX_LEVEL) return;
     const updated: ChildProfile = { ...profile, current_level: profile.current_level + 1 };
+    saveToStorage(updated);
+    set({ profile: updated });
+  },
+
+  setLevel: (level: number) => {
+    const { profile } = get();
+    if (!profile) return;
+    const updated: ChildProfile = { ...profile, current_level: level };
     saveToStorage(updated);
     set({ profile: updated });
   },

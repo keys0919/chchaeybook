@@ -202,14 +202,7 @@ export default function CompleteScreen() {
             <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
               <Text style={styles.cardBookTitle} numberOfLines={1}>{session.bookTitle}</Text>
               <View style={{ height: Spacing.sm }} />
-              <Text style={styles.cardSentence}>{displayedText}</Text>
-              {session.sentences.length > 1 ? (
-                <View style={{ marginTop: Spacing.sm }}>
-                  {session.sentences.slice(1).map((s, i) => (
-                    <Text key={i} style={styles.cardSentence}>{s}</Text>
-                  ))}
-                </View>
-              ) : null}
+              <Text style={styles.cardDoneText}>독서록에 기록했어요 ✓</Text>
             </Animated.View>
 
             <View style={{ height: Spacing.xl }} />
@@ -236,12 +229,9 @@ export default function CompleteScreen() {
             <View style={{ height: Spacing.xl }} />
 
             {/* CTA */}
-            <Animated.View style={{ opacity: ctaOpacity, gap: Spacing.md }}>
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleWriteMore}>
-                <Text style={styles.primaryBtnText}>한 문장 더 쓰기</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={handleHome}>
-                <Text style={styles.secondaryBtnText}>홈으로</Text>
+            <Animated.View style={{ opacity: ctaOpacity, gap: Spacing.md, width: '100%' }}>
+              <TouchableOpacity style={styles.primaryBtn} onPress={handleHome}>
+                <Text style={styles.primaryBtnText}>홈으로</Text>
               </TouchableOpacity>
             </Animated.View>
           </ScrollView>
@@ -270,11 +260,12 @@ const styles = StyleSheet.create({
     shadowColor: '#1A1A1A',
   },
   cardBookTitle: { ...TextStyle.caption, color: ChildColors.textTertiary },
-  cardSentence: {
-    fontFamily: FontFamily.bold,
-    fontSize: 18,
-    lineHeight: 28,
-    color: ChildColors.textPrimary,
+  cardDoneText: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 16,
+    fontWeight: '600',
+    color: ChildColors.statusSuccess,
+    lineHeight: 24,
     marginTop: 4,
   },
   stampArea: { alignItems: 'center', gap: Spacing.sm },

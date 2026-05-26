@@ -19,7 +19,7 @@ export default function RootLayout() {
   useEffect(() => {
     load();
     if (Platform.OS === 'web' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/chchaeybook/sw.js').catch(() => {});
     }
   }, []);
 

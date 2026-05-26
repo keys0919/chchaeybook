@@ -35,6 +35,13 @@ export const FontFamily = {
 
 // base-hybrid scale
 export const TextStyle = {
+  display: {
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    fontWeight: '700' as const,
+    lineHeight: 28 * 1.25,
+    letterSpacing: -0.5,
+  },
   caption: {
     fontFamily: FontFamily.regular,
     fontSize: 12,

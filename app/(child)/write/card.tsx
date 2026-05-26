@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChildColors, Spacing, Radius } from '../../../src/design/tokens';
@@ -35,7 +34,7 @@ export default function CardScreen() {
 
   const card = session?.card ?? fetchedCard;
 
-  const { scheduleSave } = useDraft({
+  useDraft({
     draftId: session?.draftId ?? 'tmp',
     childId,
     bookTitle: session?.bookTitle ?? '',
@@ -44,17 +43,13 @@ export default function CardScreen() {
     cardType: card?.type ?? 'blank',
   });
 
-  const handleTextComplete = (sentences: string[], selectedHints: string[]) => {
-    setSentences(sentences);
-    setSelectedHints(selectedHints);
+  const handleComplete = () => {
+    setSentences([]);
+    setSelectedHints([]);
     router.push('/write/complete');
   };
 
   const handleSkip = () => router.replace('/today');
-
-  const handleInputChange = (text: string) => {
-    scheduleSave({ type: 'text', text });
-  };
 
   if (!session) {
     return (
@@ -82,37 +77,33 @@ export default function CardScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.metaRow}>
-          <Text style={styles.metaBook} numberOfLines={1}>{session.bookTitle}</Text>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelBadgeText}>Level {level}</Text>
-          </View>
+      <View style={styles.metaRow}>
+        <Text style={styles.metaBook} numberOfLines={1}>{session.bookTitle}</Text>
+        <View style={styles.levelBadge}>
+          <Text style={styles.levelBadgeText}>Level {level}</Text>
         </View>
+      </View>
 
-        <View style={{ height: Spacing.md }} />
-
-        <CardRenderer
-          card={card}
-          onComplete={handleTextComplete}
-          onSkip={handleSkip}
-          onInputChange={handleInputChange}
-        />
-      </ScrollView>
+      <CardRenderer
+        card={card}
+        onComplete={handleComplete}
+        onSkip={handleSkip}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: ChildColors.background },
-  scroll: { flex: 1 },
-  content: { padding: Spacing['2xl'], paddingTop: Spacing.md, paddingBottom: Spacing.xl },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
   metaBook: { ...TextStyle.caption, color: ChildColors.textSecondary, flex: 1 },
   levelBadge: {
     backgroundColor: '#C8D8FF',

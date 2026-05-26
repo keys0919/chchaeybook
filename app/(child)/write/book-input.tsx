@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChildColors, Spacing, Radius, ComponentSize, Shadow } from '../../../src/design/tokens';
-import { TextStyle, ModeTypography } from '../../../src/design/typography';
+import { TextStyle, ModeTypography, FontFamily } from '../../../src/design/typography';
 import { useProfileStore } from '../../../src/stores/profile.store';
 import { useSessionStore } from '../../../src/stores/session.store';
 import { getRecentBooks } from '../../../src/services/record.service';
@@ -53,49 +53,59 @@ export default function BookInputScreen() {
           style={styles.scroll}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.heading}>어떤 책을 읽었어요?</Text>
-          <View style={{ height: Spacing.lg }} />
+          <View style={styles.headingArea}>
+            <Text style={styles.heading}>어떤 책을 읽었어요?</Text>
+            <Text style={styles.headingSub}>책 제목을 입력하면 바로 시작할 수 있어요</Text>
+          </View>
 
-          <Text style={styles.label}>책 제목</Text>
-          <TextInput
-            ref={titleRef}
-            style={styles.input}
-            value={bookTitle}
-            onChangeText={setBookTitle}
-            placeholder="책 제목을 입력해주세요"
-            placeholderTextColor={ChildColors.textTertiary}
-            autoFocus
-            returnKeyType="next"
-          />
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>책 제목</Text>
+            <TextInput
+              ref={titleRef}
+              style={styles.input}
+              value={bookTitle}
+              onChangeText={setBookTitle}
+              placeholder="책 제목을 입력해주세요"
+              placeholderTextColor={ChildColors.textTertiary}
+              autoFocus
+              returnKeyType="next"
+            />
+          </View>
 
-          <View style={{ height: Spacing.md }} />
-
-          <Text style={styles.label}>작가 <Text style={styles.optional}>(선택)</Text></Text>
-          <TextInput
-            style={styles.input}
-            value={author}
-            onChangeText={setAuthor}
-            placeholder="작가 이름을 입력해주세요"
-            placeholderTextColor={ChildColors.textTertiary}
-            returnKeyType="done"
-            onSubmitEditing={handleStart}
-          />
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>
+              작가{' '}
+              <Text style={styles.optional}>(선택)</Text>
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={author}
+              onChangeText={setAuthor}
+              placeholder="작가 이름을 입력해주세요"
+              placeholderTextColor={ChildColors.textTertiary}
+              returnKeyType="done"
+              onSubmitEditing={handleStart}
+            />
+          </View>
 
           {recentBooks.length > 0 && (
-            <View style={{ marginTop: Spacing.lg }}>
+            <View style={styles.recentSection}>
               <Text style={styles.recentLabel}>최근에 읽은 책</Text>
-              <View style={{ height: Spacing.sm }} />
-              {recentBooks.map((title) => (
-                <TouchableOpacity
-                  key={title}
-                  style={styles.recentItem}
-                  onPress={() => handleSelectRecent(title)}
-                >
-                  <Text style={styles.recentItemText} numberOfLines={1}>{title}</Text>
-                  <Text style={styles.recentItemArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.recentList}>
+                {recentBooks.map((title) => (
+                  <TouchableOpacity
+                    key={title}
+                    style={styles.recentItem}
+                    onPress={() => handleSelectRecent(title)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.recentItemText} numberOfLines={1}>{title}</Text>
+                    <Text style={styles.recentItemArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
         </ScrollView>
@@ -117,21 +127,64 @@ export default function BookInputScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: ChildColors.background },
   scroll: { flex: 1 },
-  content: { padding: Spacing['2xl'], paddingTop: Spacing.lg },
-  heading: { ...TextStyle.heading1, color: ChildColors.textPrimary },
-  label: { ...TextStyle.label, color: ChildColors.textPrimary, marginBottom: Spacing.xs },
-  optional: { ...TextStyle.caption, color: ChildColors.textTertiary },
+  content: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.md,
+    gap: Spacing.lg,
+  },
+
+  headingArea: {
+    gap: 6,
+    marginBottom: Spacing.sm,
+  },
+  heading: {
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    fontWeight: '700',
+    color: ChildColors.textPrimary,
+    letterSpacing: -0.5,
+    lineHeight: 35,
+  },
+  headingSub: {
+    ...TextStyle.body,
+    color: ChildColors.textSecondary,
+  },
+
+  formGroup: {
+    gap: Spacing.xs,
+  },
+  label: {
+    ...TextStyle.label,
+    color: ChildColors.textPrimary,
+  },
+  optional: {
+    ...TextStyle.caption,
+    color: ChildColors.textTertiary,
+  },
   input: {
-    height: ComponentSize.inputHeight,
-    borderWidth: 1,
+    height: 56,
+    borderWidth: 1.5,
     borderColor: ChildColors.divider,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     ...TextStyle.body,
     color: ChildColors.textPrimary,
     backgroundColor: ChildColors.surface1,
   },
-  recentLabel: { ...TextStyle.caption, color: ChildColors.textSecondary },
+
+  recentSection: {
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  recentLabel: {
+    ...TextStyle.label,
+    color: ChildColors.textSecondary,
+    fontWeight: '600',
+  },
+  recentList: {
+    gap: Spacing.xs,
+  },
   recentItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -139,14 +192,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     backgroundColor: ChildColors.surface1,
     borderRadius: Radius.md,
-    marginBottom: Spacing.xs,
     ...Shadow.level1,
     shadowColor: '#1A1A1A',
   },
   recentItemText: { ...TextStyle.body, color: ChildColors.textPrimary, flex: 1 },
-  recentItemArrow: { ...TextStyle.body, color: ChildColors.textTertiary, marginLeft: Spacing.sm },
+  recentItemArrow: {
+    fontFamily: FontFamily.regular,
+    fontSize: 18,
+    color: ChildColors.textTertiary,
+    marginLeft: Spacing.sm,
+  },
+
   ctaArea: {
-    paddingHorizontal: Spacing['2xl'],
+    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,

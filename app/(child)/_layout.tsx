@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Sun, PenLine, BookMarked, Award, Settings } from 'lucide-react-native';
+import { Sun, PenLine, BookMarked, Award } from 'lucide-react-native';
 import { ChildColors, ComponentSize } from '../../src/design/tokens';
 
 export default function ChildLayout() {
@@ -53,13 +53,7 @@ export default function ChildLayout() {
           tabBarIcon: ({ color }) => <Award size={22} color={color} strokeWidth={1.8} />,
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: '설정',
-          tabBarIcon: ({ color }) => <Settings size={22} color={color} strokeWidth={1.8} />,
-        }}
-      />
+      <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="write/card" options={{ href: null }} />
       <Tabs.Screen name="write/complete" options={{ href: null }} />
       <Tabs.Screen name="bookshelf/[bookTitle]" options={{ href: null }} />
