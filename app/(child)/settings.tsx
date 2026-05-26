@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { ChildColors, Spacing, Radius, ComponentSize } from '../../src/design/tokens';
 import { TextStyle, ModeTypography, FontFamily } from '../../src/design/typography';
 import { useProfileStore } from '../../src/stores/profile.store';
@@ -33,14 +33,7 @@ export default function SettingsScreen() {
 
   const handleLevelChange = (level: number) => {
     if (!profile) return;
-    Alert.alert(
-      '레벨 변경',
-      `Lv.${level}로 바꿀까요?`,
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '변경', onPress: () => setLevel(level) },
-      ]
-    );
+    setLevel(level);
   };
 
   return (
