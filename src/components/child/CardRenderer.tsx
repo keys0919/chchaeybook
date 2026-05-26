@@ -77,17 +77,16 @@ export function CardRenderer({ card, onComplete, onSkip }: CardRendererProps) {
             </View>
           </View>
         )}
+        {/* 액션 버튼 */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.primaryBtn} onPress={onComplete}>
+            <Text style={styles.primaryBtnText}>다 썼어요!</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+            <Text style={styles.skipText}>건너뛰기</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-
-      {/* 액션 버튼 */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.primaryBtn} onPress={onComplete}>
-          <Text style={styles.primaryBtnText}>다 썼어요!</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-          <Text style={styles.skipText}>건너뛰기</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -163,7 +162,7 @@ const styles = StyleSheet.create({
   },
   chipText: { ...TextStyle.label, color: ChildColors.textSecondary },
 
-  actions: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.lg, gap: Spacing.xs },
+  actions: { gap: Spacing.xs, paddingTop: Spacing.md },
   primaryBtn: {
     height: ComponentSize.buttonHeight,
     backgroundColor: ChildColors.primary,
