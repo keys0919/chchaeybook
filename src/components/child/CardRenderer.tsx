@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { PenLine } from 'lucide-react-native';
 import { ChildColors, Spacing, Radius, ComponentSize } from '../../design/tokens';
@@ -19,13 +18,6 @@ interface CardRendererProps {
 }
 
 export function CardRenderer({ card, onComplete, onSkip, isLastCard = true }: CardRendererProps) {
-  const handleSkip = () => {
-    Alert.alert('건너뛸까요?', '조금만 더 생각해볼까요?', [
-      { text: '계속 해보기', style: 'cancel' },
-      { text: '건너뛰기', style: 'destructive', onPress: onSkip },
-    ]);
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -83,7 +75,7 @@ export function CardRenderer({ card, onComplete, onSkip, isLastCard = true }: Ca
           <TouchableOpacity style={styles.primaryBtn} onPress={onComplete}>
             <Text style={styles.primaryBtnText}>{isLastCard ? '다 썼어요!' : '다음'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+          <TouchableOpacity style={styles.skipBtn} onPress={onSkip}>
             <Text style={styles.skipText}>건너뛰기</Text>
           </TouchableOpacity>
         </View>

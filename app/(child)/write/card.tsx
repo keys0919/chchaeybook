@@ -23,7 +23,7 @@ export default function CardScreen() {
   const level = session?.level ?? 1;
   const childId = profile?.child_id ?? '';
 
-  const { card: fetchedCard, loading, error } = useCard(level, childId, null);
+  const { card: fetchedCard, loading, error } = useCard(level, childId, session?.sessionIndex ?? 1);
 
   useEffect(() => {
     if (fetchedCard && session && !session.card) {

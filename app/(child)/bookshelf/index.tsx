@@ -9,10 +9,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Trash2 } from 'lucide-react-native';
 import { ChildColors, Spacing, Radius, Shadow, CopyTokens, ComponentSize } from '../../../src/design/tokens';
 import { TextStyle, ModeTypography, FontFamily } from '../../../src/design/typography';
 import { useProfileStore } from '../../../src/stores/profile.store';
-import { getBookshelf, type BookshelfEntry } from '../../../src/services/record.service';
+import { getBookshelf, deleteBook, type BookshelfEntry } from '../../../src/services/record.service';
 
 function formatDate(isoStr: string): string {
   const d = new Date(isoStr);
@@ -24,20 +25,31 @@ export default function BookshelfScreen() {
   const { profile } = useProfileStore();
   const [books, setBooks] = useState<BookshelfEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!profile) return;
-      setLoading(true);
-      getBookshelf(profile.child_id)
-        .then(setBooks)
-        .catch(() => setBooks([]))
-        .finally(() => setLoading(false));
-    }, [profile])
-  );
+  const loadBooks = useCallback(() => {
+    if (!profile) return;
+    setLoading(true);
+    getBookshelf(profile.child_id)
+      .then(setBooks)
+      .catch(() => setBooks([]))
+      .finally(() => setLoading(false));
+  }, [profile]);
+
+  useFocusEffect(useCallback(() => {
+    loadBooks();
+    setEditMode(false);
+  }, [loadBooks]));
 
   const handleBook = (bookTitle: string) => {
+    if (editMode) return;
     router.push({ pathname: '/bookshelf/[bookTitle]', params: { bookTitle } });
+  };
+
+  const handleDelete = (bookTitle: string) => {
+    if (!profile) return;
+    deleteBook(profile.child_id, bookTitle);
+    setBooks((prev) => prev.filter((b) => b.book_title !== bookTitle));
   };
 
   const handleWrite = () => router.push('/write/book-input');
@@ -62,9 +74,19 @@ export default function BookshelfScreen() {
               <Text style={styles.countBadgeText}>{books.length}권</Text>
             </View>
           )}
+          {books.length > 0 && (
+            <TouchableOpacity style={styles.editBtn} onPress={() => setEditMode((v) => !v)}>
+              <Text style={[styles.editBtnText, editMode && styles.editBtnTextActive]}>
+                {editMode ? '완료' : '편집'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-        {books.length > 0 && (
+        {books.length > 0 && !editMode && (
           <Text style={styles.subtitle}>읽은 책을 눌러 기록을 확인해요</Text>
+        )}
+        {editMode && (
+          <Text style={styles.subtitle}>삭제할 책의 휴지통 버튼을 눌러요</Text>
         )}
       </View>
 
@@ -83,7 +105,11 @@ export default function BookshelfScreen() {
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => handleBook(item.book_title)} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => handleBook(item.book_title)}
+              activeOpacity={editMode ? 1 : 0.7}
+            >
               <View style={styles.cardAccent} />
               <View style={styles.cardBody}>
                 <Text style={styles.bookTitle} numberOfLines={2}>{item.book_title}</Text>
@@ -91,10 +117,20 @@ export default function BookshelfScreen() {
                   {item.record_count}번 기록 · 마지막 {formatDate(item.last_read)}
                 </Text>
               </View>
-              <View style={styles.stampBadge}>
-                <Text style={styles.stampCount}>{item.total_stamps}</Text>
-                <Text style={styles.stampLabel}>도장</Text>
-              </View>
+              {editMode ? (
+                <TouchableOpacity
+                  style={styles.deleteBtn}
+                  onPress={() => handleDelete(item.book_title)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Trash2 size={20} color="#FF4545" strokeWidth={2} />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.stampBadge}>
+                  <Text style={styles.stampCount}>{item.total_stamps}</Text>
+                  <Text style={styles.stampLabel}>도장</Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         />
@@ -119,6 +155,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    flex: 1,
   },
   title: {
     fontFamily: FontFamily.bold,
@@ -214,5 +251,26 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
     color: ChildColors.primary,
     fontWeight: '500',
+  },
+  editBtn: {
+    marginLeft: 'auto' as any,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+  },
+  editBtnText: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: ChildColors.textSecondary,
+  },
+  editBtnTextActive: {
+    color: ChildColors.primary,
+  },
+  deleteBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.xs,
   },
 });

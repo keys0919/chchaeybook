@@ -44,6 +44,11 @@ export function getRecordsByBook(childId: string, bookTitle: string): ReadingRec
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
+export function deleteBookRecords(childId: string, bookTitle: string): void {
+  const all = read<ReadingRecord>(KEY.records);
+  write(KEY.records, all.filter((r) => !(r.child_id === childId && r.book_title === bookTitle)));
+}
+
 // ── Drafts ───────────────────────────────────────────────────────────────────
 
 export function upsertDraft(draft: Draft): void {

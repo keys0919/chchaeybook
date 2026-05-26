@@ -3,6 +3,7 @@ import {
   insertRecord,
   getRecordsByChild,
   getRecordsByBook as dbGetByBook,
+  deleteBookRecords,
 } from '../db/index';
 import type { ReadingRecord } from '../types/db.types';
 
@@ -22,6 +23,10 @@ export interface StampEntry {
 
 export async function createRecord(record: ReadingRecord): Promise<void> {
   insertRecord(record);
+}
+
+export function deleteBook(childId: string, bookTitle: string): void {
+  deleteBookRecords(childId, bookTitle);
 }
 
 export async function getBookshelf(childId: string): Promise<BookshelfEntry[]> {
