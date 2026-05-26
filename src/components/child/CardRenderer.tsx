@@ -95,7 +95,7 @@ export function CardRenderer({ card, onComplete, onSkip }: CardRendererProps) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollArea: { flex: 1 },
-  scrollContent: { padding: Spacing.lg, gap: Spacing.md },
+  scrollContent: { padding: Spacing.lg, paddingBottom: Spacing['2xl'], gap: Spacing.md },
 
   card: {
     backgroundColor: ChildColors.surface1,
