@@ -23,6 +23,8 @@ const LEVELS: Array<{
   { level: 2, label: '조금 써봤어요', desc: '짧은 문장은 쓸 수 있어요', grade: '2~3학년' },
   { level: 3, label: '꽤 써봤어요', desc: '생각을 이어서 쓸 수 있어요', grade: '3학년' },
   { level: 4, label: '잘 쓸 수 있어요', desc: '이유와 근거를 붙여 쓸 수 있어요', grade: '4학년', recommended: true },
+  { level: 5, label: '나와 연결해서 써요', desc: '내 경험과 생각을 책에 연결해요', grade: '5학년' },
+  { level: 6, label: '한 페이지 독서록', desc: '한 편의 글로 독서록을 완성해요', grade: '6학년' },
 ];
 
 export default function LevelSelectScreen() {

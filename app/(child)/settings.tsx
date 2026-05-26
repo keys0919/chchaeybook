@@ -10,6 +10,8 @@ const LEVELS: Array<{ level: number; label: string }> = [
   { level: 2, label: 'Lv.2  조금 써봤어요' },
   { level: 3, label: 'Lv.3  꽤 써봤어요' },
   { level: 4, label: 'Lv.4  잘 쓸 수 있어요' },
+  { level: 5, label: 'Lv.5  나와 연결해서 써요' },
+  { level: 6, label: 'Lv.6  한 페이지 독서록' },
 ];
 
 const PROFILE_KEY = 'booksok_profile';

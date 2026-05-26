@@ -10,7 +10,7 @@ export interface ChildProfile {
 
 const PROFILE_KEY = 'booksok_profile';
 const LEVEL_UP_THRESHOLD = 8;
-const MAX_LEVEL = 4;
+const MAX_LEVEL = 6;
 
 function loadFromStorage(): ChildProfile | null {
   try {
