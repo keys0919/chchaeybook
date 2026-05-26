@@ -11,8 +11,10 @@ const LEVELS: Array<{ level: number; label: string }> = [
   { level: 4, label: 'Lv.4  잘 쓸 수 있어요' },
 ];
 
+const PROFILE_KEY = 'booksok_profile';
+
 export default function SettingsScreen() {
-  const { profile, setLevel } = useProfileStore();
+  const { profile, load } = useProfileStore();
 
   const handleExport = () => {
     if (!profile) return;
@@ -32,8 +34,14 @@ export default function SettingsScreen() {
   };
 
   const handleLevelChange = (level: number) => {
-    if (!profile) return;
-    setLevel(level);
+    try {
+      const raw = localStorage.getItem(PROFILE_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      p.current_level = level;
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+      load();
+    } catch {}
   };
 
   return (
