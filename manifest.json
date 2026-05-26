@@ -1,0 +1,24 @@
+{
+  "name": "째이 독서록",
+  "short_name": "째이 독서록",
+  "description": "째이의 독서록 앱",
+  "start_url": "/chchaeybook/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#FF7340",
+  "icons": [
+    {
+      "src": "/chchaeybook/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/chchaeybook/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
