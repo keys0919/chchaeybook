@@ -17,7 +17,7 @@ import { useCard, logCardUsage } from '../../../src/hooks/useCard';
 
 export default function CardScreen() {
   const router = useRouter();
-  const { session, setCard, setSentences, setSelectedHints } = useSessionStore();
+  const { session, setCard, setSentences, setSelectedHints, startSession } = useSessionStore();
   const { profile } = useProfileStore();
 
   const level = session?.level ?? 1;
@@ -43,10 +43,18 @@ export default function CardScreen() {
     cardType: card?.type ?? 'blank',
   });
 
+  const MAX_CARDS = level === 6 ? 1 : 4;
+  const isLastCard = (session?.sessionIndex ?? 1) >= MAX_CARDS;
+
   const handleComplete = () => {
-    setSentences([]);
-    setSelectedHints([]);
-    router.push('/write/complete');
+    if (!isLastCard && session) {
+      startSession(session.bookTitle, session.author, level, session.sessionIndex + 1);
+      router.replace('/write/card' as any);
+    } else {
+      setSentences([]);
+      setSelectedHints([]);
+      router.push('/write/complete');
+    }
   };
 
   const handleSkip = () => router.replace('/today');
@@ -79,8 +87,13 @@ export default function CardScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.metaRow}>
         <Text style={styles.metaBook} numberOfLines={1}>{session.bookTitle}</Text>
-        <View style={styles.levelBadge}>
-          <Text style={styles.levelBadgeText}>Level {level}</Text>
+        <View style={styles.metaRight}>
+          {MAX_CARDS > 1 && (
+            <Text style={styles.progressText}>{session.sessionIndex}/{MAX_CARDS}</Text>
+          )}
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelBadgeText}>Level {level}</Text>
+          </View>
         </View>
       </View>
 
@@ -105,6 +118,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xs,
   },
   metaBook: { ...TextStyle.caption, color: ChildColors.textSecondary, flex: 1 },
+  metaRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  progressText: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 12,
+    fontWeight: '600',
+    color: ChildColors.textTertiary,
+  },
   levelBadge: {
     backgroundColor: '#C8D8FF',
     borderRadius: Radius.xs,
