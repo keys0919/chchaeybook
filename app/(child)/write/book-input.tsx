@@ -34,7 +34,12 @@ export default function BookInputScreen() {
 
   const handleStart = () => {
     if (!bookTitle.trim() || !profile) return;
-    startSession(bookTitle.trim(), author.trim() || null, profile.current_level);
+    let level = profile.current_level;
+    try {
+      const raw = localStorage.getItem('booksok_profile');
+      if (raw) level = JSON.parse(raw).current_level ?? level;
+    } catch {}
+    startSession(bookTitle.trim(), author.trim() || null, level);
     router.push('/write/card');
   };
 
