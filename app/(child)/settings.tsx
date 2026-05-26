@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { ChildColors, Spacing, Radius, ComponentSize } from '../../src/design/tokens';
 import { TextStyle, ModeTypography, FontFamily } from '../../src/design/typography';
@@ -15,6 +16,13 @@ const PROFILE_KEY = 'booksok_profile';
 
 export default function SettingsScreen() {
   const { profile, load } = useProfileStore();
+  const [displayLevel, setDisplayLevel] = useState<number>(profile?.current_level ?? 1);
+
+  useEffect(() => {
+    if (profile?.current_level !== undefined) {
+      setDisplayLevel(profile.current_level);
+    }
+  }, [profile?.current_level]);
 
   const handleExport = () => {
     if (!profile) return;
@@ -28,12 +36,11 @@ export default function SettingsScreen() {
       a.download = `booksok-backup-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-    } else {
-      Alert.alert('내보내기', '웹에서만 지원해요.');
     }
   };
 
   const handleLevelChange = (level: number) => {
+    setDisplayLevel(level);
     try {
       const raw = localStorage.getItem(PROFILE_KEY);
       if (!raw) return;
@@ -54,7 +61,7 @@ export default function SettingsScreen() {
         {profile ? (
           <View style={styles.profileCard}>
             <Text style={styles.profileName}>{profile.nickname}</Text>
-            <Text style={styles.profileDetail}>{profile.grade} · Level {profile.current_level}</Text>
+            <Text style={styles.profileDetail}>{profile.grade} · Level {displayLevel}</Text>
           </View>
         ) : null}
 
@@ -64,7 +71,7 @@ export default function SettingsScreen() {
         <View style={{ height: Spacing.sm }} />
         <View style={styles.levelGrid}>
           {LEVELS.map((item) => {
-            const isSelected = profile?.current_level === item.level;
+            const isSelected = displayLevel === item.level;
             return (
               <TouchableOpacity
                 key={item.level}
