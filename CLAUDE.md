@@ -20,3 +20,10 @@
 ## 5. Dependency
 - package.json 수정 또는 패키지 설치 전후:
   Read and follow → ~/.claude/skills/expo-init.md
+
+## 6. Git Push
+- 변경 사항 구현 완료 후 반드시 push:
+  ```
+  git push origin master
+  ```
+- Remote: git@github.com:keys0919/chchaeybook.git

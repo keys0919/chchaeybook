@@ -57,7 +57,14 @@ export default function CardScreen() {
     }
   };
 
-  const handleSkip = () => router.replace('/today');
+  const handleSkip = () => {
+    if (!isLastCard && session) {
+      startSession(session.bookTitle, session.author, level, session.sessionIndex + 1);
+      router.replace('/write/card' as any);
+    } else {
+      router.replace('/today');
+    }
+  };
 
   if (!session) {
     return (
